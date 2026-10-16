@@ -1,0 +1,49 @@
+{
+  "name": "jarvis-hud",
+  "version": "0.5.0",
+  "description": "Assistente pessoal estilo JARVIS no navegador: núcleo de voz, painéis com dados reais, gestos com a webcam, reconhecimento facial e Claude.",
+  "license": "MIT",
+  "author": "José Antônio Segura Marques da Silva",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GKsegura/jarvis.git"
+  },
+  "homepage": "https://github.com/GKsegura/jarvis#readme",
+  "bugs": {
+    "url": "https://github.com/GKsegura/jarvis/issues"
+  },
+  "keywords": [
+    "jarvis",
+    "voice-assistant",
+    "hud",
+    "mediapipe",
+    "face-api",
+    "vite",
+    "typescript"
+  ],
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "jarvis": "node scripts/jarvis.mjs",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "0.10.35",
+    "@vladmandic/face-api": "1.7.15"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vite": "^6.4.4",
+    "vitest": "^3.2.7",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
+    "semantic-release": "^25.0.9"
+  }
+}

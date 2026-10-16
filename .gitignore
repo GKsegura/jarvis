@@ -1,0 +1,16 @@
+node_modules
+dist
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+.chrome-profile
+.face-profile.json
+.spotify-token.json
+.jarvis-reminders.json
+.jarvis-memory.json
+.jarvis-claude-session.json
+.jarvis-gestures.json
+jarvis.config.json
+.claude/settings.local.json
