@@ -1,0 +1,149 @@
+{
+  "weather": {
+    "name": "São Paulo",
+    "latitude": -23.5505,
+    "longitude": -46.6333
+  },
+  "apps": [
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "aliases": [
+        "spotify"
+      ],
+      "open": {
+        "uri": "spotify:"
+      },
+      "window": {
+        "process": "Spotify"
+      }
+    },
+    {
+      "id": "vscode",
+      "name": "VS Code",
+      "aliases": [
+        "vs code",
+        "vscode",
+        "visual studio code",
+        "editor"
+      ],
+      "open": {
+        "exe": "%LOCALAPPDATA%/Programs/Microsoft VS Code/Code.exe"
+      },
+      "window": {
+        "process": "Code"
+      }
+    },
+    {
+      "id": "chrome",
+      "name": "Chrome",
+      "aliases": [
+        "chrome",
+        "google chrome"
+      ],
+      "open": {
+        "exe": "C:/Program Files/Google/Chrome/Application/chrome.exe"
+      },
+      "window": {
+        "process": "chrome",
+        "titleExcludes": "J.A.R.V.I.S."
+      }
+    },
+    {
+      "id": "explorer",
+      "name": "Explorador de Arquivos",
+      "aliases": [
+        "explorador",
+        "explorador de arquivos",
+        "arquivos",
+        "pastas"
+      ],
+      "open": {
+        "exe": "explorer.exe"
+      },
+      "window": {
+        "process": "explorer"
+      }
+    },
+    {
+      "id": "terminal",
+      "name": "Terminal",
+      "aliases": [
+        "terminal",
+        "prompt"
+      ],
+      "open": {
+        "exe": "wt.exe"
+      },
+      "window": {
+        "process": "WindowsTerminal"
+      }
+    },
+    {
+      "id": "jarvis",
+      "name": "JARVIS",
+      "aliases": [
+        "jarvis",
+        "hud"
+      ],
+      "window": {
+        "process": "chrome",
+        "titleIncludes": "J.A.R.V.I.S."
+      }
+    }
+  ],
+  "projects": [
+    {
+      "id": "meu-projeto",
+      "name": "Meu Projeto",
+      "aliases": [
+        "meu projeto"
+      ],
+      "cwd": "../meu-projeto",
+      "command": [
+        "npm",
+        "run",
+        "dev"
+      ],
+      "check": {
+        "port": 5174
+      }
+    }
+  ],
+  "handMenu": [
+    {
+      "label": "Spotify",
+      "action": "focus:spotify"
+    },
+    {
+      "label": "VS Code",
+      "action": "focus:vscode"
+    },
+    {
+      "label": "Timer 25",
+      "action": "timer:25"
+    },
+    {
+      "label": "Clima",
+      "action": "command:weather"
+    },
+    {
+      "label": "Telas",
+      "action": "command:takeScreens"
+    },
+    {
+      "label": "Mouse no ar",
+      "action": "mouse"
+    }
+  ],
+  "poses": {
+    "rock": {
+      "label": "Back in Black",
+      "action": "play:Back in Black"
+    },
+    "call": {
+      "label": "Status do PC",
+      "action": "command:status"
+    }
+  }
+}
