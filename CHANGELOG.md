@@ -1,3 +1,16 @@
+# [0.6.0](https://github.com/GKsegura/jarvis/compare/v0.5.1...v0.6.0) (2026-10-16)
+
+
+### Features
+
+* **desempenho:** política de orçamento de CPU/GPU ([7e27361](https://github.com/GKsegura/jarvis/commit/7e273616e56c09251bcbbe5cf3d31247bc19237b))
+
+
+### Performance Improvements
+
+* câmera a 30 fps e detecção e redesenho adaptativos ([e14a214](https://github.com/GKsegura/jarvis/commit/e14a21469aace372d92eb77473423ac960e08011))
+* **servidor:** cache do jarvis.config.json por data de modificação ([ac43c2f](https://github.com/GKsegura/jarvis/commit/ac43c2f5e9660bedf6056d35ed5cec3854f296e4))
+
 ## [0.5.1](https://github.com/GKsegura/jarvis/compare/v0.5.0...v0.5.1) (2026-10-16)
 
 
