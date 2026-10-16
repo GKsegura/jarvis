@@ -1,3 +1,10 @@
+## [0.5.1](https://github.com/GKsegura/jarvis/compare/v0.5.0...v0.5.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* **actions:** resolve o cwd do projeto com win32.resolve ([3a40784](https://github.com/GKsegura/jarvis/commit/3a407844867ec25f541aae3c53f8639a5d685e6a))
+
 # Changelog
 
 As versões abaixo de 0.5.0 foram escritas à mão; as seguintes são geradas pelo `semantic-release`.
