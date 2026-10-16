@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { statfs } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { cpus, freemem, totalmem, uptime } from 'node:os';
@@ -28,8 +28,8 @@ export function cpuPercent(prev: CpuTimes, next: CpuTimes): number {
   return Math.round(Math.min(100, Math.max(0, (1 - (next.idle - prev.idle) / total) * 100)));
 }
 
-/** Bateria e rede pelo Windows (um PowerShell só, porque cada um leva alguns segundos para subir). */
-const EXTRAS_SCRIPT = `
+/** Bateria e rede pelo Windows, uma leitura por volta do laço. */
+const EXTRAS_READ = `
 $b = Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object -First 1
 $n = Get-CimInstance Win32_PerfFormattedData_Tcpip_NetworkInterface -ErrorAction SilentlyContinue
 $online = @(Get-NetConnectionProfile -ErrorAction SilentlyContinue | Where-Object { $_.IPv4Connectivity -eq 'Internet' -or $_.IPv6Connectivity -eq 'Internet' }).Count -gt 0
@@ -41,6 +41,18 @@ $online = @(Get-NetConnectionProfile -ErrorAction SilentlyContinue | Where-Objec
   online = $online
 } | ConvertTo-Json -Compress
 `;
+
+/**
+ * Um PowerShell só, residente: subir o PowerShell é o que mais custa, então ele fica vivo
+ * lendo a cada `everyMs` e imprime um JSON por linha. Antes subia um processo novo a cada leitura.
+ */
+export function extrasLoopScript(everyMs: number): string {
+  return `while ($true) {
+${EXTRAS_READ}
+[Console]::Out.Flush()
+Start-Sleep -Milliseconds ${Math.round(everyMs)}
+}`;
+}
 
 interface Extras {
   battery: number | null;
@@ -67,22 +79,49 @@ export function parseExtras(out: string): Extras | null {
 }
 
 const EXTRAS_EVERY_MS = 15_000;
+/** Sem ninguém pedindo o estado do PC por este tempo, o PowerShell residente é encerrado. */
+const EXTRAS_IDLE_MS = 60_000;
 let extras: Extras | null = null;
-let extrasAt = 0;
-let extrasBusy = false;
+let extrasChild: ChildProcess | null = null;
+let lastAskedAt = 0;
+let idleTimer: NodeJS.Timeout | null = null;
+
+export function stopExtras(): void {
+  extrasChild?.stdout?.destroy();
+  extrasChild?.kill();
+  extrasChild = null;
+  if (idleTimer) clearInterval(idleTimer);
+  idleTimer = null;
+}
 
 function refreshExtras(): void {
-  if (process.platform !== 'win32' || extrasBusy || Date.now() - extrasAt < EXTRAS_EVERY_MS) return;
-  extrasBusy = true;
-  const child = spawn('powershell.exe', [...POWERSHELL, encoded(EXTRAS_SCRIPT)], { windowsHide: true });
-  let out = '';
-  child.stdout.on('data', (d) => (out += d));
-  child.on('error', () => (extrasBusy = false));
-  child.on('close', () => {
-    extrasBusy = false;
-    extrasAt = Date.now();
-    extras = parseExtras(out) ?? extras;
+  lastAskedAt = Date.now();
+  // Nos testes não sobe o PowerShell residente (deixaria o processo do Vitest preso)
+  if (process.platform !== 'win32' || process.env.VITEST || extrasChild) return;
+  const child = spawn('powershell.exe', [...POWERSHELL, encoded(extrasLoopScript(EXTRAS_EVERY_MS))], {
+    windowsHide: true,
+    stdio: ['ignore', 'pipe', 'ignore'],
   });
+  extrasChild = child;
+  child.unref();
+  let buffer = '';
+  child.stdout.on('data', (d) => {
+    buffer += d;
+    let nl: number;
+    while ((nl = buffer.indexOf('\n')) >= 0) {
+      extras = parseExtras(buffer.slice(0, nl)) ?? extras;
+      buffer = buffer.slice(nl + 1);
+    }
+  });
+  const gone = () => {
+    if (extrasChild === child) stopExtras();
+  };
+  child.on('error', gone);
+  child.on('close', gone);
+  idleTimer = setInterval(() => {
+    if (Date.now() - lastAskedAt > EXTRAS_IDLE_MS) stopExtras();
+  }, EXTRAS_IDLE_MS / 2);
+  idleTimer.unref();
 }
 
 let lastCpu = cpuTimes();

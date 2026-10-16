@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import { cpuPercent, parseExtras, systemSnapshot } from './system';
+import { afterAll, describe, expect, it } from 'vitest';
+import { cpuPercent, extrasLoopScript, parseExtras, stopExtras, systemSnapshot } from './system';
+
+afterAll(() => stopExtras());
 
 describe('cpuPercent', () => {
   it('mede o uso entre duas leituras', () => {
@@ -32,5 +34,15 @@ describe('systemSnapshot', () => {
     expect(s.memTotal).toBeGreaterThan(s.memFree);
     expect(s.cpu).toBeGreaterThanOrEqual(0);
     expect(s.cpu).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('extrasLoopScript', () => {
+  it('lê em laço, com o intervalo pedido, para o PowerShell subir uma vez só', () => {
+    const script = extrasLoopScript(15000);
+    expect(script).toMatch(/^while \(\$true\) \{/);
+    expect(script).toContain('Start-Sleep -Milliseconds 15000');
+    expect(script).toContain('Win32_Battery');
+    expect(script).toContain('ConvertTo-Json -Compress');
   });
 });
