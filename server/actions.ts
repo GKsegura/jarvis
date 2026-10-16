@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { connect } from 'node:net';
-import { resolve } from 'node:path';
+import { resolve, win32 } from 'node:path';
 import type { Plugin } from 'vite';
 import { parseShortcuts, type Shortcut, type ShortcutPose } from '../src/handactions';
 import type { ProjectStatus } from '../src/info';
@@ -155,7 +155,7 @@ exit 0
 
 /** Comando para rodar o projeto numa janela de terminal própria, visível, na pasta dele. */
 export function projectSpawn(project: ProjectEntry, root: string): { file: string; args: string[] } {
-  const cwd = resolve(root, project.cwd);
+  const cwd = win32.resolve(root, project.cwd); // cmd.exe é só Windows; independe do SO que roda os testes
   return { file: 'cmd.exe', args: ['/d', '/c', 'start', `JARVIS - ${project.name}`, '/d', cwd, 'cmd', '/k', ...project.command] };
 }
 
