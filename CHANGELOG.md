@@ -1,3 +1,10 @@
+## [0.6.1](https://github.com/GKsegura/jarvis/compare/v0.6.0...v0.6.1) (2026-10-16)
+
+
+### Performance Improvements
+
+* **servidor:** PowerShell residente para bateria e rede ([d4c52d6](https://github.com/GKsegura/jarvis/commit/d4c52d61ecbd8ebc64838ebf0b5bac909a7cad95))
+
 # [0.6.0](https://github.com/GKsegura/jarvis/compare/v0.5.1...v0.6.0) (2026-10-16)
 
 

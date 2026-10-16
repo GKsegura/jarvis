@@ -1,6 +1,6 @@
 {
   "name": "jarvis-hud",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Assistente pessoal estilo JARVIS no navegador: núcleo de voz, painéis com dados reais, gestos com a webcam, reconhecimento facial e Claude.",
   "license": "MIT",
   "author": "José Antônio Segura Marques da Silva",
