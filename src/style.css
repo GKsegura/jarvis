@@ -1,0 +1,255 @@
+:root {
+  --cyan: #4dd8ff;
+  --cyan-dim: rgba(77, 216, 255, 0.35);
+  --hot: #ffb347;
+  --bg: #02070c;
+  --danger: #ff6b6b;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', ui-monospace, monospace;
+}
+
+#camera,
+#tint,
+#hud {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Espelhado, como um espelho de verdade */
+#camera {
+  object-fit: cover;
+  transform: scaleX(-1);
+  filter: brightness(0.5) saturate(0.55) contrast(1.1);
+}
+
+/* Só um leve tom azul e as bordas mais escuras, para os painéis aparecerem sobre a câmera */
+#tint {
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0, 30, 45, 0.15) 0%, rgba(0, 8, 14, 0.78) 100%);
+}
+
+#hud {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+#controls {
+  position: fixed;
+  right: 20px;
+  bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 5;
+}
+
+#controls[hidden] {
+  display: none;
+}
+
+button {
+  font-family: 'Orbitron', sans-serif;
+  background: rgba(2, 16, 24, 0.62);
+  border: 1px solid var(--cyan-dim);
+  color: var(--cyan);
+  padding: 7px 12px;
+  letter-spacing: 0.14em;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgba(77, 216, 255, 0.15);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: wait;
+}
+
+button.on {
+  border-color: var(--hot);
+  color: var(--hot);
+}
+
+#notice {
+  position: fixed;
+  left: 50%;
+  top: 96px;
+  z-index: 6;
+  transform: translateX(-50%);
+  width: min(560px, calc(100vw - 32px));
+  margin: 0;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  border: 1px solid var(--danger);
+  background: rgba(30, 6, 10, 0.8);
+  color: var(--danger);
+  text-align: center;
+  line-height: 1.5;
+}
+
+#notice[hidden] {
+  display: none;
+}
+
+/* Terminal de voz */
+#terminal {
+  position: fixed;
+  left: 20px;
+  bottom: 64px;
+  z-index: 5;
+  width: min(440px, calc(100vw - 32px));
+  border: 1px solid var(--cyan-dim);
+  background: rgba(2, 14, 20, 0.78);
+  font-size: 12px;
+}
+
+#terminal[hidden] {
+  display: none;
+}
+
+#terminal.listening {
+  border-color: var(--cyan);
+}
+
+.term-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--cyan-dim);
+  background: rgba(77, 216, 255, 0.1);
+}
+
+.term-state {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+#terminal.listening .term-state {
+  color: var(--danger);
+  opacity: 1;
+  animation: blink 1.2s steps(2) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.term-meter {
+  flex: 1;
+  height: 6px;
+  border: 1px solid var(--cyan-dim);
+}
+
+.term-level {
+  width: 0;
+  height: 100%;
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  transition: width 0.08s linear;
+}
+
+.term-hint {
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+.term-lines {
+  list-style: none;
+  margin: 0;
+  padding: 6px 10px;
+  max-height: 170px;
+  overflow-y: auto;
+  line-height: 1.55;
+}
+
+.term-time {
+  margin-right: 8px;
+  opacity: 0.45;
+}
+
+.term-lines .heard {
+  color: #e6faff;
+}
+
+.term-lines .cmd {
+  color: #7cffb2;
+}
+
+.term-lines .warn {
+  color: var(--hot);
+}
+
+.term-lines .error {
+  color: var(--danger);
+}
+
+.term-lines .jarvis {
+  color: var(--cyan);
+  opacity: 0.8;
+}
+
+.term-lines .interim {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.term-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 6px;
+  border-top: 1px solid var(--cyan-dim);
+}
+
+.term-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #e6faff;
+  font: inherit;
+}
+
+.term-input input::placeholder {
+  color: var(--cyan-dim);
+}
+
+.term-lines .thinking {
+  color: #c28bff;
+}
+
+/* Painel de controle das outras telas: sem câmera, fundo escuro com um leve brilho */
+body.dashboard {
+  background: radial-gradient(ellipse at 50% 35%, #062230 0%, #02070c 72%);
+}
+
+body.dashboard #camera,
+body.dashboard #tint,
+body.dashboard #controls,
+body.dashboard #terminal,
+body.dashboard #notice {
+  display: none;
+}
+
+body.dashboard #hud {
+  cursor: default;
+}
