@@ -20,6 +20,7 @@ export class HandTracker {
   private lastVideoTime = -1;
   /** Quanto tempo levou a última detecção, em ms (aparece no painel de diagnóstico). */
   lastDetectMs = 0;
+  private lastDetectAt = -Infinity;
 
   private constructor(private readonly landmarker: HandLandmarker) {}
 
@@ -42,10 +43,12 @@ export class HandTracker {
     }
   }
 
-  /** Detecta as mãos no frame atual do vídeo; `null` quando ainda não chegou um frame novo. */
-  detect(video: HTMLVideoElement, now: number): TrackedHand[] | null {
+  /** Detecta as mãos no frame atual do vídeo; `null` quando ainda não chegou um frame novo ou o orçamento (`minIntervalMs`) não deixa. */
+  detect(video: HTMLVideoElement, now: number, minIntervalMs = 0): TrackedHand[] | null {
     if (video.readyState < 2 || video.currentTime === this.lastVideoTime) return null;
+    if (now - this.lastDetectAt < minIntervalMs) return null;
     this.lastVideoTime = video.currentTime;
+    this.lastDetectAt = now;
 
     const start = performance.now();
     const result = this.landmarker.detectForVideo(video, now);

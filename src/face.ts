@@ -1,3 +1,4 @@
+import { FACE_IDLE_EVERY_MS } from './budget';
 import type { ExpressionScores } from './mood';
 
 // Manter igual à versão de @vladmandic/face-api no package.json
@@ -32,6 +33,7 @@ const HITS_TO_VERIFY = 2;
 const MISSES_TO_UNKNOWN = 3;
 /** Com o rosto confirmado, procura rostos a cada 2,5 s (presença e visitantes)... */
 const VERIFIED_EVERY_MS = 2500;
+
 /** ...mas só reconfirma com o servidor (e renova o token) a cada 10 s. */
 const REVERIFY_EVERY_MS = 10_000;
 /** Lendo a expressão enquanto o senhor fala. */
@@ -70,6 +72,8 @@ export class FaceGuard {
   private expressionsReady = false;
   /** Até quando ler o rosto com mais frequência (o senhor está falando com o JARVIS). */
   private closelyUntil = 0;
+  /** Em espera ou ausente: só confere o rosto de vez em quando, para poupar CPU/GPU. */
+  idle = false;
   private tokenExpires = 0;
   private busy = false;
   private nextAt = 0;
@@ -151,7 +155,8 @@ export class FaceGuard {
         // Verificado, só confere de vez em quando (renova o token); senão, procura com frequência.
         // Enquanto o senhor fala com o JARVIS, lê mais rápido para acompanhar a expressão
         const calm = this.state === 'verified' || this.state === 'unenrolled' ? VERIFIED_EVERY_MS : 700;
-        const every = this.enrollment ? 450 : performance.now() < this.closelyUntil ? CLOSE_EVERY_MS : calm;
+        const lively = this.enrollment ? 450 : performance.now() < this.closelyUntil ? CLOSE_EVERY_MS : calm;
+        const every = this.idle && !this.enrollment ? Math.max(lively, FACE_IDLE_EVERY_MS) : lively;
         this.nextAt = performance.now() + every;
       });
   }

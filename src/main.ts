@@ -1,4 +1,5 @@
 import './style.css';
+import { canvasScale, frameInterval, handInterval, type Activity } from './budget';
 import { CameraError, startCamera } from './camera';
 import type { CoreState } from './core';
 import { dist, mid, toScreen, type Pt } from './geometry';
@@ -105,7 +106,7 @@ let view = { w: window.innerWidth, h: window.innerHeight };
 
 function resize() {
   view = { w: window.innerWidth, h: window.innerHeight };
-  hud.resize(view.w, view.h, Math.min(window.devicePixelRatio, 2));
+  hud.resize(view.w, view.h, canvasScale(window.devicePixelRatio));
 }
 window.addEventListener('resize', resize);
 resize();
@@ -186,7 +187,7 @@ function sayWhenFree(text: string, waited = 0) {
 function readHands(now: number): Hand[] {
   if (!handTracker) return [];
   // Só atualiza quando chega um frame novo da câmera; entre frames, reaproveita as mãos estáveis
-  const detected = handTracker.detect(video, now);
+  const detected = handTracker.detect(video, now, handInterval(activity(now)));
   if (detected) stableHands = stabilizer.update(detected, now);
 
   const hands = stableHands.map((h): Hand => {
@@ -2184,7 +2185,35 @@ function statusLine(): Array<{ text: string; color?: string }> {
 const HINTS = ['"JARVIS, …" + pedido', 'APONTAR: cursor', 'PALMA PARADA: menu', 'DUAS PALMAS: parar tudo', '✌ DESLIZAR: janelas', 'G: todos os gestos'];
 const MOUSE_HINTS = ['"JARVIS, …" + pedido', 'T: terminal', 'ARRASTAR: mover painel', 'CLIQUE NO TÍTULO: destaque', 'R: reorganizar'];
 
+/** Última vez que o mouse ou o teclado foram usados: a interface precisa responder rápido. */
+let lastInputAt = -Infinity;
+for (const type of ['pointermove', 'pointerdown', 'keydown', 'wheel']) {
+  window.addEventListener(type, () => (lastInputAt = performance.now()), { passive: true });
+}
+
+/** O que está acontecendo agora, para o orçamento de CPU/GPU (ver budget.ts). */
+function activity(now: number): Activity {
+  return {
+    hands: stableHands.length > 0,
+    sinceHandsMs: now - lastHandsSeenAt,
+    interacting: mouseMode || control.zooming || Boolean(control.menu) || now - lastInputAt < 2000,
+    standby,
+    away: presence.away,
+    hidden: document.hidden,
+  };
+}
+
+let lastFrameAt = -Infinity;
+
 function frame(now: number) {
+  // Parado, em espera ou ausente: redesenha menos para poupar CPU/GPU
+  const act = activity(now);
+  if (now - lastFrameAt < frameInterval(act) - 2) {
+    requestAnimationFrame(frame);
+    return;
+  }
+  lastFrameAt = now;
+  face.idle = standby || presence.away || act.hidden;
   const hands = readHands(now);
   if (hands.length > 0) {
     // Anuncia as mãos só quando elas voltam depois de um tempo sumidas
