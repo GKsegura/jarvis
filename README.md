@@ -147,6 +147,7 @@ Sempre começando com "Jarvis":
 - **Humor:** "como eu estou?", "qual é o meu humor?"
 - **Telas:** "assume as telas", "libera as telas"
 - **Gestos e interface:** "mouse no ar", "desliga o mouse", "pode falar", "resumo do dia", "aumenta a interface", "diminui a interface", "modo espera", "quais gestos você conhece?", "aprende este gesto para …", "esquece o gesto …"
+- **Rotinas:** "o que você aprendeu sobre mim?", "minhas rotinas", "esquece as rotinas"
 - **Notícias:** "notícias", "o que está acontecendo", "notícias de tecnologia", "mais uma" (continua de onde parou)
 - **Música, apps, janelas, projetos e finanças:** veja as seções abaixo
 - **Outros:** "quem é você", "olá", "silêncio", "voz do filme", "português", "o que eu deveria estar fazendo?", "ligar/desligar o Claude", "cadastrar meu rosto"
@@ -274,6 +275,15 @@ Só o que está no `jarvis.config.json` (dá para editar sem reiniciar). Nada de
 4. Clique no botão **SPOTIFY: CONECTAR** e faça o login uma vez (o token fica em `.spotify-token.json`, fora do git).
 
 Por voz: "tocar Back in Black", "coloca Legião Urbana", "pausa", "continua a música", "próxima", "volta a música", "que música é essa?", "volume 30". Se o Spotify não estiver aberto, ele abre o app. Também dá para pedir junto: "toque Amor e Sexo com 10% do volume".
+
+## Rotinas aprendidas
+
+O JARVIS **observa e pergunta**. Com o seu rosto verificado, ele anota o que você faz (abrir um app, tocar uma música, pedir o clima ou o resumo do dia) com a hora. Quando percebe que algo se repete **em pelo menos 3 dias, por volta do mesmo horário**, ele pergunta: "Notei que o senhor costuma abrir o VS Code por volta das 09:00. Quer que eu faça isso sozinho daqui para frente?"
+
+- Responda "sim" ou "não" (ou joinha / polegar para baixo). **Nada vira rotina sem o seu sim**, e um "não" não é perguntado de novo.
+- Rotina aceita roda sozinha uma vez por dia, na hora, só com o seu rosto verificado. Ela só faz coisas simples: focar um app da lista, tocar uma música ou ler uma informação (clima, resumo do dia, status, lembretes, projetos). **Nunca roda projetos nem mexe no PC.**
+- "Jarvis, o que você aprendeu sobre mim?" lista as rotinas. "Esquece as rotinas" apaga **tudo**: rotinas e histórico.
+- Fica só no seu computador, em `.jarvis-usage.json` (fora do git). Guarda apenas o tipo, o nome (id do app, música ou comando) e a hora, **nunca o que você disse**. O histórico guarda 30 dias. Com outra pessoa na câmera, nada é anotado.
 
 ## Notícias
 

@@ -32,3 +32,7 @@ Use a skill **configurar-jarvis** (`.claude/skills/configurar-jarvis/SKILL.md`):
 - Windows primeiro: janelas, mouse, volume e telas usam PowerShell e atalhos do Windows.
 - Commits seguem Conventional Commits em português (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`); `feat!:` ou `BREAKING CHANGE:` gera major. Versões e `CHANGELOG.md` saem do `semantic-release` no CI (push na `main`). Não altere a versão à mão.
 - Testes ficam ao lado do código; novo comportamento precisa de teste.
+
+## Rotinas aprendidas
+
+Lógica pura em `src/routines.ts` (detecção de hábitos, janela de sugestão, rotinas devidas), armazenamento em `server/usage.ts` (`.jarvis-usage.json`, gitignored) e fluxo no `src/main.ts` (`logUsage`, `routineTick`, `answerRoutine`). Regras: só registra com rosto verificado e sem visita; só pergunta, nunca ativa sozinho; rotinas aceitas só executam o que está em `AUTO_COMMANDS`, apps da lista e música; o histórico guarda tipo, nome curto e hora, nunca texto da conversa.
