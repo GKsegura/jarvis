@@ -1,5 +1,7 @@
 import './style.css';
 import { VoiceCore } from './core';
+import { canvasScale } from './budget';
+import { pollAdaptive } from './poll';
 import {
   diskPercent,
   formatCountdown,
@@ -42,7 +44,7 @@ const orbitron = (size: number, weight = 600) => `${weight} ${size}px Orbitron, 
 let view = { w: window.innerWidth, h: window.innerHeight };
 function resize() {
   view = { w: window.innerWidth, h: window.innerHeight };
-  const dpr = Math.min(window.devicePixelRatio, 2);
+  const dpr = canvasScale(window.devicePixelRatio);
   canvas.width = Math.round(view.w * dpr);
   canvas.height = Math.round(view.h * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -84,10 +86,7 @@ const getJson = async <T>(url: string): Promise<T | null> => {
   }
 };
 
-function poll(fn: () => Promise<void>, ms: number) {
-  void fn();
-  setInterval(() => void fn(), ms);
-}
+const poll = (fn: () => Promise<void>, ms: number) => pollAdaptive(fn, ms, () => (document.hidden ? 4 : 1));
 poll(async () => {
   const s = await getJson<SystemInfo>('/api/system');
   if (!s) return;
@@ -387,7 +386,15 @@ function wrap(text: string, width: number): string[] {
   return lines;
 }
 
+let lastFrameAt = -Infinity;
+
 function frame(now: number) {
+  // O painel é informativo: 30 fps bastam
+  if (now - lastFrameAt < 31) {
+    requestAnimationFrame(frame);
+    return;
+  }
+  lastFrameAt = now;
   const { w, h } = view;
   ctx.clearRect(0, 0, w, h);
   const ok = linked(now);

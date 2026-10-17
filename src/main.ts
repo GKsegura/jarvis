@@ -1,4 +1,5 @@
 import './style.css';
+import { pollAdaptive, pollSlowdown } from './poll';
 import { canvasScale, frameInterval, handInterval, type Activity } from './budget';
 import { CameraError, startCamera } from './camera';
 import type { CoreState } from './core';
@@ -487,10 +488,8 @@ const refreshReminders = () =>
     .then((d) => (reminders = d.reminders))
     .catch(() => null);
 
-function poll(fn: () => Promise<unknown>, everyMs: number) {
-  void fn();
-  setInterval(() => void fn(), everyMs);
-}
+const poll = (fn: () => Promise<unknown>, everyMs: number) =>
+  pollAdaptive(fn, everyMs, () => pollSlowdown({ standby, away: presence.away, hidden: document.hidden }));
 poll(refreshSystem, 3000);
 poll(refreshProjects, 10_000);
 poll(refreshWeather, 10 * 60_000);
