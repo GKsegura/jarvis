@@ -1,5 +1,6 @@
 import './style.css';
 import { pollAdaptive, pollSlowdown } from './poll';
+import { AlertEngine } from './alerts';
 import { canvasScale, frameInterval, handInterval, type Activity } from './budget';
 import { CameraError, startCamera } from './camera';
 import type { CoreState } from './core';
@@ -1204,6 +1205,20 @@ async function handleRoutines(intent: RoutinesIntent) {
     void voice.say(L().actionFailed);
   }
 }
+
+// ---------- Alertas proativos (bateria, CPU, projeto que caiu, chuva) ----------
+const alertEngine = new AlertEngine(() => voice.style);
+const ALERTS_EVERY_MS = 5000;
+
+function checkAlerts() {
+  // Em espera ou com o senhor ausente, não fala sozinho
+  if (standby || presence.away) return;
+  for (const alert of alertEngine.check({ system, projects, weather, now: Date.now() })) {
+    terminal.log('warn', `↳ alerta: ${alert.text}`);
+    sayWhenFree(alert.text);
+  }
+}
+setInterval(checkAlerts, ALERTS_EVERY_MS);
 
 pollAdaptive(
   () => routineTick().catch(() => null),
