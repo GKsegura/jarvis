@@ -4,6 +4,25 @@
     "latitude": -23.5505,
     "longitude": -46.6333
   },
+  "news": {
+    "max": 12,
+    "feeds": [
+      {
+        "name": "G1",
+        "url": "https://g1.globo.com/rss/g1/",
+        "topics": [
+          "geral"
+        ]
+      },
+      {
+        "name": "Tecnoblog",
+        "url": "https://tecnoblog.net/feed/",
+        "topics": [
+          "tecnologia"
+        ]
+      }
+    ]
+  },
   "apps": [
     {
       "id": "spotify",

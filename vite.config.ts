@@ -6,6 +6,7 @@ import { faceStore } from './server/face-store';
 import { gestures } from './server/gestures';
 import { input } from './server/input';
 import { janus } from './server/janus';
+import { news } from './server/news';
 import { reminders } from './server/reminders';
 import { screens } from './server/screens';
 import { spotify } from './server/spotify';
@@ -86,6 +87,7 @@ export default defineConfig(({ mode }) => {
       janus(env),
       system(),
       weather(process.cwd()),
+      news(process.cwd()),
       reminders(process.cwd()),
       screens(process.cwd()),
       input(),
