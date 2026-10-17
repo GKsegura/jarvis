@@ -1,3 +1,14 @@
+# [0.7.0](https://github.com/GKsegura/jarvis/compare/v0.6.2...v0.7.0) (2026-10-17)
+
+
+### Features
+
+* **notícias:** comandos de voz e painel de notícias ([b467b14](https://github.com/GKsegura/jarvis/commit/b467b14da64363934a45a150f575d25bbe73f07e))
+* **notícias:** manchetes no resumo do dia ([bb16ce8](https://github.com/GKsegura/jarvis/commit/bb16ce8c1d9ed9758103286a927cd612c31db139))
+* **notícias:** servidor de notícias por RSS ([700b90b](https://github.com/GKsegura/jarvis/commit/700b90b61505ee40c19232f8a3288661a9afeadf))
+* **rotinas:** detecção de hábitos e armazenamento local ([58a85bf](https://github.com/GKsegura/jarvis/commit/58a85bff635b41423ea5e676ca3f421272577e80))
+* **rotinas:** perguntas, execução automática e comandos de voz ([aef5862](https://github.com/GKsegura/jarvis/commit/aef58623dfb1c97712e44c1ad310e04ef8cb0068))
+
 ## [0.6.2](https://github.com/GKsegura/jarvis/compare/v0.6.1...v0.6.2) (2026-10-17)
 
 
