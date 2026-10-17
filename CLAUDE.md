@@ -33,6 +33,10 @@ Use a skill **configurar-jarvis** (`.claude/skills/configurar-jarvis/SKILL.md`):
 - Commits seguem Conventional Commits em português (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`); `feat!:` ou `BREAKING CHANGE:` gera major. Versões e `CHANGELOG.md` saem do `semantic-release` no CI (push na `main`). Não altere a versão à mão.
 - Testes ficam ao lado do código; novo comportamento precisa de teste.
 
+## Alertas proativos
+
+`src/alerts.ts` (`AlertEngine`, puro e testado) decide quando avisar de bateria, CPU, projeto que caiu e chuva, com tempo de espera por alerta. O `src/main.ts` chama `checkAlerts` a cada 5 s e fala com `sayWhenFree`. Para criar outro alerta, acrescente a regra em `check()` e o tempo em `COOLDOWN`.
+
 ## Rotinas aprendidas
 
 Lógica pura em `src/routines.ts` (detecção de hábitos, janela de sugestão, rotinas devidas), armazenamento em `server/usage.ts` (`.jarvis-usage.json`, gitignored) e fluxo no `src/main.ts` (`logUsage`, `routineTick`, `answerRoutine`). Regras: só registra com rosto verificado e sem visita; só pergunta, nunca ativa sozinho; rotinas aceitas só executam o que está em `AUTO_COMMANDS`, apps da lista e música; o histórico guarda tipo, nome curto e hora, nunca texto da conversa.

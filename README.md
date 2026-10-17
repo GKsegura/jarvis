@@ -276,6 +276,20 @@ Só o que está no `jarvis.config.json` (dá para editar sem reiniciar). Nada de
 
 Por voz: "tocar Back in Black", "coloca Legião Urbana", "pausa", "continua a música", "próxima", "volta a música", "que música é essa?", "volume 30". Se o Spotify não estiver aberto, ele abre o app. Também dá para pedir junto: "toque Amor e Sexo com 10% do volume".
 
+## Alertas proativos
+
+O JARVIS avisa sozinho, sem você pedir, e cada aviso tem um tempo de espera para não ficar repetindo:
+
+| Alerta | Quando | Repete depois de |
+| --- | --- | --- |
+| Bateria baixa | 20% ou menos, descarregando | 30 min |
+| Bateria crítica | 10% ou menos, descarregando | 10 min |
+| CPU alta | 90% ou mais por 1 minuto seguido | 15 min |
+| Projeto fora do ar | um projeto da lista que estava no ar caiu | 10 min |
+| Chuva | 70% ou mais de chance no resto do dia | 6 h |
+
+Em modo espera ou com você ausente, ele não fala. No modo silencioso, o aviso aparece só como legenda.
+
 ## Rotinas aprendidas
 
 O JARVIS **observa e pergunta**. Com o seu rosto verificado, ele anota o que você faz (abrir um app, tocar uma música, pedir o clima ou o resumo do dia) com a hora. Quando percebe que algo se repete **em pelo menos 3 dias, por volta do mesmo horário**, ele pergunta: "Notei que o senhor costuma abrir o VS Code por volta das 09:00. Quer que eu faça isso sozinho daqui para frente?"
