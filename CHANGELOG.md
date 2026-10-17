@@ -1,3 +1,10 @@
+# [0.8.0](https://github.com/GKsegura/jarvis/compare/v0.7.0...v0.8.0) (2026-10-17)
+
+
+### Features
+
+* **alertas:** avisos proativos de bateria, CPU, projeto e chuva ([e180f60](https://github.com/GKsegura/jarvis/commit/e180f60d9faba1a50d6be1ea2ca0eff21de39cd3))
+
 # [0.7.0](https://github.com/GKsegura/jarvis/compare/v0.6.2...v0.7.0) (2026-10-17)
 
 
