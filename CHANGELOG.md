@@ -1,3 +1,11 @@
+## [0.6.2](https://github.com/GKsegura/jarvis/compare/v0.6.1...v0.6.2) (2026-10-17)
+
+
+### Performance Improvements
+
+* polling adaptativo e dashboard a 30 fps ([527442a](https://github.com/GKsegura/jarvis/commit/527442a9ff74ebd3ed73eb6ead4d72e4783a74a1))
+* **servidor:** um tasklist só para checar todos os projetos ([e070bd5](https://github.com/GKsegura/jarvis/commit/e070bd5b2e668676f65a656167bd5ccbee353856))
+
 ## [0.6.1](https://github.com/GKsegura/jarvis/compare/v0.6.0...v0.6.1) (2026-10-16)
 
 
