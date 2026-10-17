@@ -95,6 +95,8 @@ export interface Lines {
   spotifyPremium: string;
   janusOffline: string;
   janusError: string;
+  newsError: string;
+  newsNone: string;
   windowOp: (op: 'left' | 'right' | 'maximize' | 'minimize', name: string) => string;
   windowNotFound: string;
 }
@@ -193,6 +195,8 @@ export const LINES: Record<VoiceStyle, Lines> = {
     spotifyPremium: 'Spotify requires a Premium account for that, sir.',
     janusOffline: 'janus is offline, sir. Shall I start it?',
     janusError: "I couldn't read the finances from janus, sir.",
+    newsError: "I couldn't fetch the news, sir.",
+    newsNone: 'I found no news on that, sir.',
     windowOp: (op, name) =>
       ({
         left: `Moving ${name} to the left monitor.`,
@@ -295,6 +299,8 @@ export const LINES: Record<VoiceStyle, Lines> = {
     spotifyPremium: 'O Spotify exige conta Premium para isso, senhor.',
     janusOffline: 'O janus está desligado, senhor. Quer que eu o inicie?',
     janusError: 'Não consegui ler as finanças do janus, senhor.',
+    newsError: 'Não consegui buscar as notícias, senhor.',
+    newsNone: 'Não encontrei notícias sobre isso, senhor.',
     windowOp: (op, name) =>
       ({
         left: `Movendo o ${name} para o monitor da esquerda.`,

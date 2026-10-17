@@ -1,4 +1,5 @@
 import type { FinanceSummary } from './finance';
+import { ago, type NewsItem } from './news';
 import { clamp, type Pt } from './geometry';
 import {
   diskPercent,
@@ -30,13 +31,14 @@ export const scaleRect = (r: Rect, s: number): Rect => ({ x: r.x * s, y: r.y * s
 export const UI_SCALE_MIN = 0.8;
 export const UI_SCALE_MAX = 1.6;
 
-export type PanelId = 'system' | 'projects' | 'finance' | 'weather' | 'reminders' | 'music';
-export const PANEL_ORDER: PanelId[] = ['system', 'projects', 'finance', 'weather', 'reminders', 'music'];
-const COLUMNS: Record<'left' | 'right', PanelId[]> = { left: ['system', 'projects', 'finance'], right: ['weather', 'reminders', 'music'] };
+export type PanelId = 'system' | 'projects' | 'finance' | 'news' | 'weather' | 'reminders' | 'music';
+export const PANEL_ORDER: PanelId[] = ['system', 'projects', 'finance', 'news', 'weather', 'reminders', 'music'];
+const COLUMNS: Record<'left' | 'right', PanelId[]> = { left: ['system', 'projects', 'finance', 'news'], right: ['weather', 'reminders', 'music'] };
 const TITLE: Record<PanelId, string> = {
   system: 'SISTEMA',
   projects: 'PROJETOS',
   finance: 'FINANÇAS',
+  news: 'NOTÍCIAS',
   weather: 'CLIMA',
   reminders: 'LEMBRETES',
   music: 'SPOTIFY',
@@ -64,6 +66,7 @@ export interface PanelsData {
   reminders: Reminder[] | null;
   music: MusicView | null;
   finance: FinanceSummary | null;
+  news: NewsItem[] | null;
   /** Outra pessoa na frente da câmera: esconde os painéis pessoais. */
   privacy: boolean;
   /** Painel em destaque (mostra mais detalhes). */
@@ -168,6 +171,7 @@ export class Panels {
     if (d.privacy && PRIVATE.includes(id)) return false;
     if (id === 'music') return d.music !== null;
     if (id === 'finance') return d.finance !== null;
+    if (id === 'news') return d.news !== null && d.news.length > 0;
     if (id === 'projects') return d.projects !== null && d.projects.length > 0;
     return true;
   }
@@ -226,6 +230,8 @@ export class Panels {
         return 96;
       case 'finance':
         return PAD + LINE * 6 + 4;
+      case 'news':
+        return PAD + LINE * Math.min(d.news?.length ?? 1, expanded ? 6 : 3) + 4;
     }
   }
 
@@ -279,6 +285,9 @@ export class Panels {
         break;
       case 'finance':
         this.finance(ctx, body, d.finance!, r);
+        break;
+      case 'news':
+        this.news(ctx, body, d, focused);
         break;
     }
     ctx.restore();
@@ -428,6 +437,22 @@ export class Panels {
       ctx.fillStyle = DIM;
       ctx.fillText('×', b.x + b.w - 5, y);
       targets.push({ id: `reminder:${rem.id}`, rect: { x: b.x + b.w - 14, y: y - 14, w: 20, h: 18 } });
+    });
+  }
+
+  private news(ctx: CanvasRenderingContext2D, b: { x: number; y: number; w: number }, d: PanelsData, expanded: boolean): void {
+    (d.news ?? []).slice(0, expanded ? 6 : 3).forEach((item, i) => {
+      const y = b.y + i * LINE + 10;
+      const when = ago(item.publishedAt, d.now);
+      ctx.font = mono(11);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = DIM;
+      ctx.fillText(when, b.x + b.w, y);
+      const whenW = ctx.measureText(when).width;
+      ctx.font = mono(12);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = TEXT;
+      ctx.fillText(ellipsize(ctx, `• ${item.title}`, b.w - whenW - 10), b.x, y);
     });
   }
 

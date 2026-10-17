@@ -21,6 +21,7 @@ import { greeting, LINES } from './lines';
 import { openCameraMic } from './mic-device';
 import { MicLevel, VoiceTerminal } from './terminal';
 import { financeSpeech, type FinanceSummary } from './finance';
+import { headlinesSpeech, type NewsItem } from './news';
 import {
   daySummarySpeech,
   dateSpeech,
@@ -42,10 +43,12 @@ import {
   parseFinance,
   parseIntent,
   parseMusic,
+  parseNews,
   type Catalog,
   type CatalogItem,
   type Intent,
   type MusicIntent,
+  type NewsIntent,
   type WindowOp,
   matchWindow,
   parseWindowRequest,
@@ -463,6 +466,7 @@ let projects: ProjectStatus[] | null = null;
 let weather: WeatherInfo | null = null;
 let reminders: Reminder[] | null = null;
 let finance: { summary: FinanceSummary; until: number } | null = null;
+let news: NewsItem[] | null = null;
 
 const getJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
   const r = await fetch(url, init);
@@ -483,6 +487,10 @@ const refreshWeather = () =>
   getJson<WeatherInfo>('/api/weather')
     .then((w) => (weather = w))
     .catch(() => null);
+const refreshNews = () =>
+  getJson<{ items: NewsItem[] }>('/api/news')
+    .then((d) => (news = d.items))
+    .catch(() => null);
 const refreshReminders = () =>
   getJson<{ reminders: Reminder[] }>('/api/reminders')
     .then((d) => (reminders = d.reminders))
@@ -493,6 +501,7 @@ const poll = (fn: () => Promise<unknown>, everyMs: number) =>
 poll(refreshSystem, 3000);
 poll(refreshProjects, 10_000);
 poll(refreshWeather, 10 * 60_000);
+poll(refreshNews, 10 * 60_000);
 poll(refreshReminders, 30_000);
 
 async function handleStatus() {
@@ -976,6 +985,31 @@ async function handleFinance() {
   }
 }
 
+/** O que o JARVIS está lendo agora: a lista e onde parou ("mais uma" continua dali). */
+let newsReading: { items: NewsItem[]; next: number } | null = null;
+
+async function handleNews(intent: NewsIntent) {
+  try {
+    if (intent.action === 'read') {
+      const items = intent.topic
+        ? (await getJson<{ items: NewsItem[] }>(`/api/news?topic=${encodeURIComponent(intent.topic)}`)).items
+        : news ?? (await refreshNews()) ?? [];
+      newsReading = { items, next: 0 };
+    }
+    const spoken = newsReading ? headlinesSpeech(newsReading.items, newsReading.next) : null;
+    if (!spoken || !newsReading) {
+      void voice.say(L().newsNone);
+      return;
+    }
+    newsReading.next = spoken.next;
+    terminal.log('cmd', `↳ notícias: ${newsReading.items.slice(spoken.next - 3 < 0 ? 0 : spoken.next - 3, spoken.next).map((i) => i.title).join(' | ')}`);
+    sayWhenFree(spoken.text);
+  } catch (e) {
+    terminal.log('error', `notícias: ${e instanceof Error ? e.message : e}`);
+    void voice.say(L().newsError);
+  }
+}
+
 /** Frases longas vão para o Claude mesmo que tenham uma palavra-chave ("volta", "abre"...). */
 const LOCAL_COMMAND_MAX_WORDS = 4;
 /** "Quais são meus lembretes para amanhã?" ainda é pedido local. */
@@ -1232,6 +1266,11 @@ function handleUtterance(text: string) {
   }
   if (parseFinance(text)) {
     void handleFinance();
+    return;
+  }
+  const newsIntent = parseNews(text);
+  if (newsIntent) {
+    void handleNews(newsIntent);
     return;
   }
   const intent = parseIntent(text, catalog);
@@ -2148,6 +2187,7 @@ function panelsData(now: number): PanelsData {
     reminders,
     music: musicView(performance.now()),
     finance: finance?.summary ?? null,
+    news,
     privacy,
     focus,
     grabbed: grab?.id ?? null,

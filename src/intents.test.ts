@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { confirmation, matchWindow, parseFinance, parseIntent, parseMusic, parseWindowRequest, type Catalog } from './intents';
+import { confirmation, matchWindow, parseFinance, parseIntent, parseMusic, parseNews, parseWindowRequest, type Catalog } from './intents';
 
 const catalog: Catalog = {
   apps: [
@@ -144,5 +144,25 @@ describe('confirmation', () => {
     ['qual é a capital da França', null],
   ])('"%s" → %s', (text, expected) => {
     expect(confirmation(text)).toBe(expected);
+  });
+});
+
+describe('parseNews', () => {
+  it.each([
+    ['notícias', { action: 'read' }],
+    ['Jarvis, quais são as notícias?', { action: 'read' }],
+    ['manchetes do dia', { action: 'read' }],
+    ['notícias de tecnologia', { action: 'read', topic: 'tecnologia' }],
+    ['notícias sobre a economia', { action: 'read', topic: 'economia' }],
+    ['o que está acontecendo', { action: 'read' }],
+    ['mais uma', { action: 'more' }],
+    ['próxima notícia', { action: 'more' }],
+  ])('%s', (text, expected) => {
+    expect(parseNews(text)).toEqual(expected);
+  });
+
+  it('ignora frases que não são pedido de notícia ou são longas demais', () => {
+    expect(parseNews('que horas são')).toBeNull();
+    expect(parseNews('me lembra de ler as notícias amanhã de manhã quando eu acordar')).toBeNull();
   });
 });

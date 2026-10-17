@@ -178,3 +178,16 @@ export function confirmation(text: string): 'yes' | 'no' | null {
   if (/^(nao|cancel\w*|esquece|deixa|negativo|para|espera)\b/.test(t)) return 'no';
   return null;
 }
+
+export type NewsIntent = { action: 'read'; topic?: string } | { action: 'more' };
+
+/** Entende "notícias", "notícias de tecnologia", "o que está acontecendo", "mais uma" (frases curtas). */
+export function parseNews(text: string): NewsIntent | null {
+  const t = normalize(text).replace(/^((ei|ok|oi)\s+)?jarvis\s+/, '');
+  if (t.split(' ').length > 8) return null;
+  if (/\b(mais uma|mais noticias|proxima noticia|proximas noticias|outra noticia|proxima manchete)\b/.test(t)) return { action: 'more' };
+  const topic = t.match(/\b(?:noticias?|manchetes?)\s+(?:de|do|da|sobre|em)\s+(?:o\s+|a\s+|os\s+|as\s+)?(.+)$/)?.[1]?.trim();
+  if (topic && !/^(dia|hoje|mundo|momento|agora|semana)$/.test(topic)) return { action: 'read', topic };
+  if (/\b(noticias?|manchetes?)\b|\bo que (esta|ta) acontecendo\b|\bquais as novidades\b/.test(t)) return { action: 'read' };
+  return null;
+}

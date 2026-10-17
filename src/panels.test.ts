@@ -16,6 +16,7 @@ function fakeCtx(): CanvasRenderingContext2D {
 const data: PanelsData = {
   now: Date.now(),
   system: null,
+  news: null,
   projects: null,
   weather: null,
   reminders: [{ id: 'r1', text: 'Estudar', dueAt: Date.now() + 60 * 60_000, kind: 'reminder', done: false, createdAt: 0 }],
