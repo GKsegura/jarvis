@@ -191,3 +191,13 @@ export function parseNews(text: string): NewsIntent | null {
   if (/\b(noticias?|manchetes?)\b|\bo que (esta|ta) acontecendo\b|\bquais as novidades\b/.test(t)) return { action: 'read' };
   return null;
 }
+
+export type RoutinesIntent = 'list' | 'forget';
+
+/** "O que você aprendeu sobre mim?", "minhas rotinas", "esquece as rotinas" (só o que fala de rotinas ou aprendizado). */
+export function parseRoutines(text: string): RoutinesIntent | null {
+  const t = normalize(text).replace(/^((ei|ok|oi)\s+)?jarvis\s+/, '');
+  if (/\b(esquece|esqueca|apaga|apague|limpa|limpe|zera|zere)\b.*\b(rotinas?|aprendizado|que (voce )?aprendeu|meus habitos)\b/.test(t)) return 'forget';
+  if (/\b(o que|que|quais?)\b.*\b(voce )?(aprendeu|sabe)\b.*\b(sobre mim|de mim|comigo)\b|\b(minhas|quais|que) (rotinas|habitos)\b/.test(t)) return 'list';
+  return null;
+}

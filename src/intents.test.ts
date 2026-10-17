@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { confirmation, matchWindow, parseFinance, parseIntent, parseMusic, parseNews, parseWindowRequest, type Catalog } from './intents';
+import { confirmation, matchWindow, parseFinance, parseIntent, parseMusic, parseNews, parseRoutines, parseWindowRequest, type Catalog } from './intents';
 
 const catalog: Catalog = {
   apps: [
@@ -164,5 +164,20 @@ describe('parseNews', () => {
   it('ignora frases que não são pedido de notícia ou são longas demais', () => {
     expect(parseNews('que horas são')).toBeNull();
     expect(parseNews('me lembra de ler as notícias amanhã de manhã quando eu acordar')).toBeNull();
+  });
+});
+
+describe('parseRoutines', () => {
+  it.each([
+    ['o que você aprendeu sobre mim', 'list'],
+    ['Jarvis, quais são as minhas rotinas?', 'list'],
+    ['que hábitos você notou', 'list'],
+    ['esquece as rotinas', 'forget'],
+    ['apaga o que você aprendeu', 'forget'],
+    ['limpa meus hábitos', 'forget'],
+    ['esquece da prova', null],
+    ['esquece o gesto do spotify', null],
+  ])('%s', (text, expected) => {
+    expect(parseRoutines(text)).toBe(expected);
   });
 });

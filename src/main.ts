@@ -22,6 +22,7 @@ import { openCameraMic } from './mic-device';
 import { MicLevel, VoiceTerminal } from './terminal';
 import { financeSpeech, type FinanceSummary } from './finance';
 import { headlinesSpeech, type NewsItem } from './news';
+import { AUTO_COMMANDS, clock, routineId, routineLabel, type Candidate, type Routine, type UsageKind } from './routines';
 import {
   daySummarySpeech,
   dateSpeech,
@@ -44,11 +45,13 @@ import {
   parseIntent,
   parseMusic,
   parseNews,
+  parseRoutines,
   type Catalog,
   type CatalogItem,
   type Intent,
   type MusicIntent,
   type NewsIntent,
+  type RoutinesIntent,
   type WindowOp,
   matchWindow,
   parseWindowRequest,
@@ -270,7 +273,7 @@ function updatePointer(hands: Hand[], now: number) {
 function updateThumbs(hands: Hand[]) {
   const hand = hands.find((h) => (h.gesture === 'thumbsUp' || h.gesture === 'thumbsDown') && h.before !== h.gesture);
   if (!hand) return;
-  if (!pendingProject) {
+  if (!pendingProject && !pendingRoutine) {
     // Sem pergunta pendente, joinha tira do modo silencioso (depois do "shh")
     if (hand.gesture === 'thumbsUp' && silent) setSilent(false);
     return;
@@ -371,6 +374,7 @@ window.addEventListener('keydown', (e) => {
 
 // ---------- Comandos locais ----------
 function runCommand(cmd: Command, text = '') {
+  if (AUTO_COMMANDS.has(cmd)) logUsage('command', cmd);
   switch (cmd) {
     case 'status':
       void handleStatus();
@@ -790,7 +794,7 @@ face.onChange = (state, previous) => {
   terminal.log(state === 'unknown' ? 'warn' : 'info', `Identidade: ${FACE_STATE_LABEL[state]}`);
   if (!welcomed) return;
   // Voltando de uma ausência, quem cumprimenta é a presença (com o resumo do que aconteceu)
-  if (state === 'verified' && previous !== 'enrolling' && !presence.away) sayWhenFree(L().welcomeBack);
+  if (state === 'verified' && previous !== 'enrolling' && !presence.away) welcomeOrBriefing();
   else if (state === 'unknown') sayWhenFree(L().faceUnknown);
   else if (state === 'identifying' && previous === 'verified') {
     terminal.log('warn', 'Identidade expirada: recursos sensíveis bloqueados até eu ver o senhor de novo.');
@@ -1045,6 +1049,7 @@ async function callAction(kind: 'open' | 'focus' | 'project' | 'window', item: C
     }
     if (!r.ok) throw new Error(data.message ?? `HTTP ${r.status}`);
     terminal.log('cmd', `↳ ${data.message}`);
+    if (kind === 'open' || kind === 'focus') logUsage('app', item.id);
     return true;
   } catch (e) {
     terminal.log('error', `Ação falhou: ${e instanceof Error ? e.message : e}`);
@@ -1075,6 +1080,7 @@ function handleIntent(intent: Intent) {
 
 /** Resposta à pergunta "Devo iniciar...?". Devolve true se a frase era a resposta. */
 function handleConfirmation(text: string): boolean {
+  if (answerRoutine(text)) return true;
   if (!pendingProject) return false;
   if (performance.now() > pendingProject.expires) {
     pendingProject = null;
@@ -1097,6 +1103,113 @@ function handleConfirmation(text: string): boolean {
   });
   return true;
 }
+
+// ---------- Rotinas aprendidas (observa e pergunta) ----------
+/** Pergunta de rotina esperando o "sim" do senhor (expira). */
+let pendingRoutine: { cand: Candidate; expires: number } | null = null;
+/** Rotinas já perguntadas nesta sessão: não insiste. */
+const askedRoutines = new Set<string>();
+/** Enquanto uma rotina roda sozinha, o que ela faz não conta como hábito novo. */
+let routineRunning = false;
+const ROUTINE_ASK_MS = 20_000;
+const ROUTINE_EVERY_MS = 60_000;
+
+const usageHeaders = () => ({ 'Content-Type': 'application/json', ...face.headers() });
+
+/** Anota o que o senhor faz (app, música, comando) para perceber hábitos. Só com o rosto do dono verificado. */
+function logUsage(kind: UsageKind, key: string) {
+  if (routineRunning || !face.verified || privacy) return;
+  void fetch('/api/usage', { method: 'POST', headers: usageHeaders(), body: JSON.stringify({ kind, key }) }).catch(() => null);
+}
+
+const describeRoutine = (kind: UsageKind, key: string) => routineLabel(kind, key, catalog.apps.find((a) => a.id === key)?.name);
+
+async function runRoutine(routine: Routine) {
+  routineRunning = true;
+  try {
+    const label = describeRoutine(routine.kind, routine.key);
+    terminal.log('cmd', `↳ rotina: ${label}`);
+    sayWhenFree(L().routineRunning(label));
+    if (routine.kind === 'app') {
+      const app = catalog.apps.find((a) => a.id === routine.key);
+      if (app) await callAction('focus', app);
+    } else if (routine.kind === 'music') {
+      await handleMusic({ action: 'play', query: routine.key }, true);
+    } else if (AUTO_COMMANDS.has(routine.key)) {
+      runCommand(routine.key as Command);
+    }
+  } finally {
+    routineRunning = false;
+    void fetch('/api/routines/ran', { method: 'POST', headers: usageHeaders(), body: JSON.stringify({ id: routine.id }) }).catch(() => null);
+  }
+}
+
+async function routineTick() {
+  if (!face.verified || privacy || presence.away || standby || routineRunning) return;
+  const r = await fetch('/api/routines/tick', { headers: face.headers() });
+  if (!r.ok) return;
+  const { suggest, run } = (await r.json()) as { suggest: Candidate | null; run: Routine[] };
+  for (const routine of run) await runRoutine(routine);
+  const id = suggest ? routineId(suggest.kind, suggest.key) : '';
+  if (suggest && !pendingRoutine && !askedRoutines.has(id) && !voice.busy && !claudeThinking && !pendingProject) {
+    askedRoutines.add(id);
+    pendingRoutine = { cand: suggest, expires: performance.now() + ROUTINE_ASK_MS };
+    const label = describeRoutine(suggest.kind, suggest.key);
+    terminal.log('cmd', `↳ rotina sugerida: ${label} às ${clock(suggest.minute)}. Responda "sim" ou "não" (ou joinha / polegar para baixo).`);
+    void voice.say(L().routineAsk(label, clock(suggest.minute)));
+  }
+}
+
+function answerRoutine(text: string): boolean {
+  if (!pendingRoutine) return false;
+  if (performance.now() > pendingRoutine.expires) {
+    pendingRoutine = null;
+    return false;
+  }
+  const answer = confirmation(text);
+  if (!answer) return false;
+  const { cand } = pendingRoutine;
+  pendingRoutine = null;
+  const body = JSON.stringify({ kind: cand.kind, key: cand.key, minute: cand.minute, answer });
+  void fetch('/api/routines/answer', { method: 'POST', headers: usageHeaders(), body }).then(() => {
+    // Aceitou agora: marca como feita hoje para não rodar de novo logo em seguida
+    if (answer === 'yes') {
+      void fetch('/api/routines/ran', { method: 'POST', headers: usageHeaders(), body: JSON.stringify({ id: routineId(cand.kind, cand.key) }) });
+    }
+  });
+  void voice.say(answer === 'yes' ? L().routineYes : L().routineNo);
+  return true;
+}
+
+async function handleRoutines(intent: RoutinesIntent) {
+  if (!requireFace('Rotinas')) return;
+  try {
+    if (intent === 'forget') {
+      await fetch('/api/routines/forget', { method: 'POST', headers: usageHeaders(), body: '{}' });
+      askedRoutines.clear();
+      void voice.say(L().routinesForgotten);
+      return;
+    }
+    const r = await fetch('/api/routines', { headers: face.headers() });
+    const data = (await r.json()) as { routines: Routine[]; candidates: Candidate[] };
+    const accepted = data.routines.filter((x) => x.state === 'accepted');
+    const known = new Set(data.routines.map((x) => x.id));
+    const watching = data.candidates.filter((c) => !known.has(routineId(c.kind, c.key))).length;
+    if (accepted.length === 0 && watching === 0) {
+      void voice.say(L().routinesNone);
+      return;
+    }
+    sayWhenFree(L().routinesList(accepted.map((x) => `${describeRoutine(x.kind, x.key)} às ${clock(x.minute)}`), watching));
+  } catch {
+    void voice.say(L().actionFailed);
+  }
+}
+
+pollAdaptive(
+  () => routineTick().catch(() => null),
+  ROUTINE_EVERY_MS,
+  () => pollSlowdown({ standby, away: presence.away, hidden: document.hidden }),
+);
 
 // ---------- Spotify ----------
 let spotifyStatus = { configured: false, connected: false, redirectUri: '' };
@@ -1153,6 +1266,7 @@ async function handleMusic(music: MusicIntent, quiet = false) {
     return;
   }
   if (!requireFace('Spotify')) return;
+  if (music.action === 'play') logUsage('music', music.query);
   terminal.log('cmd', `↳ Spotify: ${music.action}${'query' in music ? ` "${music.query}"` : ''}`);
   try {
     const r = await fetch('/api/spotify/command', {
@@ -1266,6 +1380,11 @@ function handleUtterance(text: string) {
   }
   if (parseFinance(text)) {
     void handleFinance();
+    return;
+  }
+  const routinesIntent = parseRoutines(text);
+  if (routinesIntent) {
+    void handleRoutines(routinesIntent);
     return;
   }
   const newsIntent = parseNews(text);
@@ -1430,6 +1549,22 @@ spotifyButton.addEventListener('click', connectSpotify);
 updateButtons();
 
 // ---------- Inicialização (sem tela inicial: liga direto) ----------
+const BRIEFED_KEY = 'jarvis-briefed-day';
+
+/** Na primeira vez do dia que o rosto é confirmado, em vez do "bem-vindo" vem o resumo do dia com as manchetes. */
+function welcomeOrBriefing(): void {
+  const today = new Date().toDateString();
+  let briefed = false;
+  try {
+    briefed = localStorage.getItem(BRIEFED_KEY) === today;
+    if (!briefed) localStorage.setItem(BRIEFED_KEY, today);
+  } catch {
+    briefed = true; // sem armazenamento, não repete o resumo a cada reconhecimento
+  }
+  if (briefed || privacy) sayWhenFree(L().welcomeBack);
+  else void handleDaySummary();
+}
+
 async function welcome() {
   await voice.ready;
   const line =
@@ -1441,7 +1576,7 @@ async function welcome() {
   const spoke = await voice.say(line);
   welcomed = true;
   // O rosto pode ter sido confirmado enquanto ele falava a primeira frase
-  if (face.state === 'verified') sayWhenFree(L().welcomeBack);
+  if (face.state === 'verified') welcomeOrBriefing();
   if (spoke) return;
   // O navegador bloqueou o som antes da primeira interação: fala no primeiro clique ou tecla
   showNotice('Clique em qualquer lugar para ouvir o JARVIS.', 'info', 0);
@@ -1703,10 +1838,10 @@ function wakeFromStandby() {
 }
 
 async function handleDaySummary() {
-  await Promise.all([refreshWeather(), refreshProjects(), refreshReminders()]);
+  await Promise.all([refreshWeather(), refreshProjects(), refreshReminders(), refreshNews()]);
   const now = new Date();
-  void voice.say(
-    daySummarySpeech({ now, greeting: greeting(now, voice.style), weather, reminders, projects, personal: face.verified && !privacy }, voice.style),
+  sayWhenFree(
+    daySummarySpeech({ now, greeting: greeting(now, voice.style), weather, reminders, projects, personal: face.verified && !privacy, news }, voice.style),
   );
 }
 
@@ -1945,6 +2080,7 @@ function handleControl(e: ControlEvent) {
       }
       learning = null;
       pendingProject = null;
+      pendingRoutine = null;
       showToast('TUDO PARADO', 'red');
       updateButtons();
       break;

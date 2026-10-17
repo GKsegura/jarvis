@@ -96,6 +96,13 @@ export interface Lines {
   janusOffline: string;
   janusError: string;
   newsError: string;
+  routineAsk: (label: string, time: string) => string;
+  routineYes: string;
+  routineNo: string;
+  routineRunning: (label: string) => string;
+  routinesList: (items: string[], watching: number) => string;
+  routinesNone: string;
+  routinesForgotten: string;
   newsNone: string;
   windowOp: (op: 'left' | 'right' | 'maximize' | 'minimize', name: string) => string;
   windowNotFound: string;
@@ -196,6 +203,15 @@ export const LINES: Record<VoiceStyle, Lines> = {
     janusOffline: 'janus is offline, sir. Shall I start it?',
     janusError: "I couldn't read the finances from janus, sir.",
     newsError: "I couldn't fetch the news, sir.",
+    routineAsk: (label, time) => `I've noticed you usually ${label} around ${time}, sir. Shall I do it on my own from now on?`,
+    routineYes: 'Understood, sir. I\'ll take care of it.',
+    routineNo: 'Very well, sir. I won\'t ask about that again.',
+    routineRunning: (label) => `Your routine, sir: ${label}.`,
+    routinesList: (items, watching) =>
+      (items.length ? `I handle ${items.length} routine${items.length > 1 ? 's' : ''} on my own: ${items.join('; ')}.` : 'I don\'t run any routine on my own yet, sir.') +
+      (watching ? ` I\'m watching ${watching} more pattern${watching > 1 ? 's' : ''}.` : ''),
+    routinesNone: 'I haven\'t learned any routine yet, sir.',
+    routinesForgotten: 'Done, sir. I\'ve forgotten everything I learned about your routine.',
     newsNone: 'I found no news on that, sir.',
     windowOp: (op, name) =>
       ({
@@ -300,6 +316,15 @@ export const LINES: Record<VoiceStyle, Lines> = {
     janusOffline: 'O janus está desligado, senhor. Quer que eu o inicie?',
     janusError: 'Não consegui ler as finanças do janus, senhor.',
     newsError: 'Não consegui buscar as notícias, senhor.',
+    routineAsk: (label, time) => `Notei que o senhor costuma ${label} por volta das ${time}. Quer que eu faça isso sozinho daqui para frente?`,
+    routineYes: 'Entendido, senhor. Deixo comigo.',
+    routineNo: 'Certo, senhor. Não pergunto mais sobre isso.',
+    routineRunning: (label) => `Sua rotina, senhor: ${label}.`,
+    routinesList: (items, watching) =>
+      (items.length ? `Cuido sozinho de ${items.length} rotina${items.length > 1 ? 's' : ''}: ${items.join('; ')}.` : 'Ainda não faço nenhuma rotina sozinho, senhor.') +
+      (watching ? ` E estou observando mais ${watching} padr${watching > 1 ? 'ões' : 'ão'}.` : ''),
+    routinesNone: 'Ainda não aprendi nenhuma rotina, senhor.',
+    routinesForgotten: 'Pronto, senhor. Esqueci tudo o que aprendi sobre a sua rotina.',
     newsNone: 'Não encontrei notícias sobre isso, senhor.',
     windowOp: (op, name) =>
       ({
