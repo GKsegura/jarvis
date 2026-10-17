@@ -39,3 +39,18 @@ describe('daySummarySpeech', () => {
     expect(text).toBe('Boa tarde, senhor. São 14:00.');
   });
 });
+
+describe('daySummarySpeech com notícias', () => {
+  const base = { now: new Date(2026, 9, 12, 8, 0), greeting: 'Bom dia', weather: null, reminders: null, projects: null, personal: false };
+
+  it('fecha o resumo com as duas primeiras manchetes', () => {
+    const text = daySummarySpeech({ ...base, news: [{ title: 'Primeira - G1' }, { title: 'Segunda' }, { title: 'Terceira' }] });
+    expect(text).toContain('Nas notícias: Primeira. Segunda.');
+    expect(text).not.toContain('Terceira');
+  });
+
+  it('não menciona notícias quando não há', () => {
+    expect(daySummarySpeech({ ...base, news: [] })).not.toContain('notícias');
+    expect(daySummarySpeech(base)).not.toContain('notícias');
+  });
+});

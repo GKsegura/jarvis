@@ -1,3 +1,4 @@
+import { spokenTitle } from './news';
 import type { VoiceStyle } from './lines';
 
 /** GET /api/system (server/system.ts). */
@@ -216,7 +217,16 @@ export function dateSpeech(date = new Date(), style: VoiceStyle = 'br'): string 
 
 /** Resumo do dia (polegar no peito ou "Jarvis, resumo do dia"): hora, clima, lembretes de hoje e projetos no ar. */
 export function daySummarySpeech(
-  d: { now: Date; greeting: string; weather: WeatherInfo | null; reminders: Reminder[] | null; projects: ProjectStatus[] | null; personal: boolean },
+  d: {
+    now: Date;
+    greeting: string;
+    weather: WeatherInfo | null;
+    reminders: Reminder[] | null;
+    projects: ProjectStatus[] | null;
+    personal: boolean;
+    /** Manchetes do dia (as duas primeiras entram no resumo). */
+    news?: Array<{ title: string }> | null;
+  },
   style: VoiceStyle = 'br',
 ): string {
   const uk = style === 'uk';
@@ -242,5 +252,9 @@ export function daySummarySpeech(
     }
   }
   if (d.projects?.length) parts.push(projectsSpeech(d.projects, style));
+  if (d.news?.length) {
+    const heads = d.news.slice(0, 2).map((n) => spokenTitle(n.title));
+    parts.push(`${uk ? 'In the news' : 'Nas notícias'}: ${heads.join('. ')}.`);
+  }
   return parts.join(' ');
 }
