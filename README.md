@@ -68,6 +68,7 @@ Arquivo **pessoal** (fora do git): copie o `jarvis.config.example.json` e adapte
 | --- | --- |
 | `weather` | Nome, latitude e longitude do clima. O exemplo vem com São Paulo: troque pela sua cidade |
 | `apps` | Aplicativos que ele abre/foca (`open` com `exe` ou `uri`, `window` para achar a janela, `aliases` para como você fala) |
+| `news` | Feeds RSS das notícias (`feeds` com `name`, `url` https e `topics`) e `max` de manchetes. Sem isso, usa G1 e Tecnoblog |
 | `projects` | Projetos que ele sobe com confirmação (`cwd`, `command`, `check` por porta ou processo). O exemplo traz um projeto de mentira (`meu-projeto`): troque pelos seus |
 | `handMenu` | Itens do menu circular da palma parada |
 | `poses` | Ações das poses 🤘 (`rock`) e 🤙 (`call`) |
@@ -117,6 +118,7 @@ Embaixo do núcleo aparecem o que ele ouviu e o que ele está falando.
 | **Clima** | [Open-Meteo](https://open-meteo.com) (grátis, sem chave). O local fica em `jarvis.config.json` → `"weather"` (o exemplo vem com São Paulo) |
 | **Lembretes** | Timers e lembretes, salvos em `.jarvis-reminders.json` (sobrevivem a reiniciar) |
 | **Spotify** | Música tocando, com ⏮ ⏯ ⏭ |
+| **Notícias** | Manchetes dos feeds RSS do `jarvis.config.json` → `"news"` (grátis, sem chave, atualizadas a cada 10 min) |
 | **Finanças** | Aparece por 30 s depois do resumo do janus |
 
 - **Arrastar:** pinça (ou mouse) num painel. A posição fica salva; tecla `R` devolve tudo para as colunas.
@@ -145,6 +147,7 @@ Sempre começando com "Jarvis":
 - **Humor:** "como eu estou?", "qual é o meu humor?"
 - **Telas:** "assume as telas", "libera as telas"
 - **Gestos e interface:** "mouse no ar", "desliga o mouse", "pode falar", "resumo do dia", "aumenta a interface", "diminui a interface", "modo espera", "quais gestos você conhece?", "aprende este gesto para …", "esquece o gesto …"
+- **Notícias:** "notícias", "o que está acontecendo", "notícias de tecnologia", "mais uma" (continua de onde parou)
 - **Música, apps, janelas, projetos e finanças:** veja as seções abaixo
 - **Outros:** "quem é você", "olá", "silêncio", "voz do filme", "português", "o que eu deveria estar fazendo?", "ligar/desligar o Claude", "cadastrar meu rosto"
 
@@ -271,6 +274,17 @@ Só o que está no `jarvis.config.json` (dá para editar sem reiniciar). Nada de
 4. Clique no botão **SPOTIFY: CONECTAR** e faça o login uma vez (o token fica em `.spotify-token.json`, fora do git).
 
 Por voz: "tocar Back in Black", "coloca Legião Urbana", "pausa", "continua a música", "próxima", "volta a música", "que música é essa?", "volume 30". Se o Spotify não estiver aberto, ele abre o app. Também dá para pedir junto: "toque Amor e Sexo com 10% do volume".
+
+## Notícias
+
+"Jarvis, notícias" lê as três primeiras manchetes; "mais uma" (ou "próxima notícia") lê as seguintes. "Notícias de tecnologia" filtra pelos assuntos que você deu aos feeds. O painel NOTÍCIAS mostra as manchetes mais recentes (clique no título para ver seis).
+
+- As notícias vêm de feeds **RSS** buscados pelo servidor local, sem chave de API e com cache de 10 minutos. Só feeds `https` são aceitos.
+- Para mudar as fontes, edite `news.feeds` no seu `jarvis.config.json`:
+  ```json
+  "news": { "max": 12, "feeds": [{ "name": "G1", "url": "https://g1.globo.com/rss/g1/", "topics": ["geral"] }] }
+  ```
+- Cada feed pode ter vários `topics`; é por eles que "notícias de <assunto>" encontra as manchetes.
 
 ## Finanças (janus)
 

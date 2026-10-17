@@ -37,6 +37,12 @@ Local do clima (Open-Meteo). Troque pelos dados da cidade do usuário.
 - `check`: está no ar? `{ "port": 5174 }` ou `{ "process": "electron", "titleIncludes": "MeuApp" }`.
 - O exemplo traz um projeto de mentira (`meu-projeto`): troque pelos projetos reais da pessoa.
 
+## `news`
+```json
+"news": { "max": 12, "feeds": [{ "name": "G1", "url": "https://g1.globo.com/rss/g1/", "topics": ["geral"] }] }
+```
+Feeds RSS/Atom (só `https`). `topics` são os assuntos que a pessoa pode pedir por voz ("notícias de tecnologia"). Sem a chave `news`, vale G1 + Tecnoblog.
+
 ## `handMenu[]` e `poses`
 ```json
 "handMenu": [{ "label": "Spotify", "action": "focus:spotify" }],
