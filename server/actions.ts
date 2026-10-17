@@ -317,29 +317,47 @@ export function parseTasklist(out: string): string[] {
     .filter((title) => title && title !== 'N/A');
 }
 
-function processTitles(name: string): Promise<string[] | null> {
+/** Janelas de todos os processos, em uma chamada só do tasklist (bem mais rápido que subir um PowerShell). */
+export function parseTasklistAll(out: string): Map<string, string[]> {
+  const byProcess = new Map<string, string[]>();
+  for (const line of out.split(/\r?\n/)) {
+    if (!line.startsWith('"')) continue;
+    const cols = line.slice(1, -1).split('","');
+    const name = cols[0]?.toLowerCase();
+    const title = cols[cols.length - 1];
+    if (!name || !title || title === 'N/A') continue;
+    byProcess.set(name, [...(byProcess.get(name) ?? []), title]);
+  }
+  return byProcess;
+}
+
+function allProcessTitles(): Promise<Map<string, string[]> | null> {
   return new Promise((resolvePromise) => {
-    const exe = name.toLowerCase().endsWith('.exe') ? name : `${name}.exe`;
-    const child = spawn('tasklist', ['/FI', `IMAGENAME eq ${exe}`, '/V', '/FO', 'CSV', '/NH'], { windowsHide: true });
+    const child = spawn('tasklist', ['/V', '/FO', 'CSV', '/NH'], { windowsHide: true });
     let out = '';
     child.stdout.on('data', (d) => (out += d));
     child.on('error', () => resolvePromise(null));
-    child.on('close', () => resolvePromise(parseTasklist(out)));
+    child.on('close', () => resolvePromise(parseTasklistAll(out)));
   });
 }
 
-async function isRunning(check: ProjectCheck): Promise<boolean> {
+/** O projeto está no ar? Por porta ou pelos títulos das janelas do processo. */
+export async function checkProject(check: ProjectCheck, titles: Map<string, string[]> | null): Promise<boolean> {
   if ('port' in check) return portOpen(check.port);
-  const titles = await processTitles(check.process);
-  if (!titles) return false;
+  const exe = check.process.toLowerCase().endsWith('.exe') ? check.process.toLowerCase() : `${check.process.toLowerCase()}.exe`;
+  const list = titles?.get(exe);
+  if (!list) return false;
   const want = check.titleIncludes?.toLowerCase();
-  return want ? titles.some((t) => t.toLowerCase().includes(want)) : titles.length > 0;
+  return want ? list.some((t) => t.toLowerCase().includes(want)) : list.length > 0;
 }
 
 /** Quais projetos estão no ar agora (os sem "check" voltam como running: null). */
 export async function projectsStatus(config: ActionsConfig): Promise<ProjectStatus[]> {
+  // Só roda o tasklist se algum projeto precisa dele, e uma vez só para todos
+  const needsTasklist = config.projects.some((p) => p.check && 'process' in p.check);
+  const titles = needsTasklist ? await allProcessTitles() : null;
   return Promise.all(
-    config.projects.map(async (p) => ({ id: p.id, name: p.name, running: p.check ? await isRunning(p.check) : null })),
+    config.projects.map(async (p) => ({ id: p.id, name: p.name, running: p.check ? await checkProject(p.check, titles) : null })),
   );
 }
 

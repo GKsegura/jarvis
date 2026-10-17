@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { focusScript, parseConfig, parseTasklist, portOpen, projectSpawn, runAction, windowScript } from './actions';
+import { checkProject, focusScript, parseConfig, parseTasklist, parseTasklistAll, portOpen, projectSpawn, runAction, windowScript } from './actions';
 
 const realConfig = parseConfig(JSON.parse(readFileSync(new URL('../jarvis.config.example.json', import.meta.url), 'utf8')));
 
@@ -86,11 +86,27 @@ describe('projetos no ar', () => {
 
   it('lê os títulos das janelas do tasklist, ignorando "N/A" e a mensagem de "nenhuma tarefa"', () => {
     const out = [
-      '"electron.exe","1","Console","1","90.000 K","Running","PC\Jose","0:00:01","Hydra"',
-      '"electron.exe","2","Console","1","20.000 K","Running","PC\Jose","0:00:00","N/A"',
+      '"electron.exe","1","Console","1","90.000 K","Running","PC\\Jose","0:00:01","Hydra"',
+      '"electron.exe","2","Console","1","20.000 K","Running","PC\\Jose","0:00:00","N/A"',
       'INFORMAÇÕES: nenhuma tarefa em execução',
     ].join('\r\n');
     expect(parseTasklist(out)).toEqual(['Hydra']);
+  });
+
+  it('agrupa as janelas de todos os processos de uma vez e confere o projeto pelo processo e pelo título', async () => {
+    const out = [
+      '"electron.exe","1","Console","1","90.000 K","Running","PC\\Jose","0:00:01","Hydra"',
+      '"Code.exe","2","Console","1","20.000 K","Running","PC\\Jose","0:00:00","arquivo.ts - VS Code"',
+      '"svchost.exe","3","Services","0","1 K","Unknown","N/A","0:00:00","N/A"',
+    ].join('\r\n');
+    const titles = parseTasklistAll(out);
+    expect(titles.get('electron.exe')).toEqual(['Hydra']);
+    expect(titles.has('svchost.exe')).toBe(false);
+    expect(await checkProject({ process: 'electron', titleIncludes: 'hydra' }, titles)).toBe(true);
+    expect(await checkProject({ process: 'electron', titleIncludes: 'outro' }, titles)).toBe(false);
+    expect(await checkProject({ process: 'Code.exe' }, titles)).toBe(true);
+    expect(await checkProject({ process: 'nao-existe' }, titles)).toBe(false);
+    expect(await checkProject({ process: 'electron' }, null)).toBe(false);
   });
 
   it('vê se uma porta está aberta', async () => {
