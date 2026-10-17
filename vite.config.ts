@@ -12,6 +12,7 @@ import { screens } from './server/screens';
 import { spotify } from './server/spotify';
 import { isLocalRequest, readBody, sendJson } from './server/http';
 import { system } from './server/system';
+import { usage } from './server/usage';
 import { weather } from './server/weather';
 
 const FISH_TTS_URL = 'https://api.fish.audio/v1/tts';
@@ -88,6 +89,7 @@ export default defineConfig(({ mode }) => {
       system(),
       weather(process.cwd()),
       news(process.cwd()),
+      usage(process.cwd()),
       reminders(process.cwd()),
       screens(process.cwd()),
       input(),

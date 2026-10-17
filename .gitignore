@@ -12,5 +12,6 @@ dist
 .jarvis-memory.json
 .jarvis-claude-session.json
 .jarvis-gestures.json
+.jarvis-usage.json
 jarvis.config.json
 .claude/settings.local.json
