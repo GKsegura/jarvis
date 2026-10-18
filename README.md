@@ -365,3 +365,7 @@ Versionamento semântico automático (`semantic-release`) a partir de [Conventio
 ## Stack
 
 TypeScript, Vite, Canvas 2D, MediaPipe (mãos e objetos), face-api (@vladmandic), Web Speech API, Open-Meteo, Spotify Web API (PKCE), fish.audio TTS e Claude Code. O servidor do Vite também é o backend local (`server/`): sistema, clima, lembretes, rosto, ações, Spotify, janus, voz e Claude.
+
+## 📊 Linguagens
+
+![Linguagens](https://raw.githubusercontent.com/GKsegura/GKsegura/main/cards/jarvis.svg)
